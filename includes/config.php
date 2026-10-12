@@ -11,8 +11,9 @@ $envPass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD');
 $envName = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE');
 $envPort = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT');
 
-// Jika $envHost kosong atau bernilai 'localhost', paksa ubah ke '127.0.0.1' agar memakai TCP/IP socket
-if (empty($envHost) || $envHost === 'localhost') {
+// Jika $envHost kosong, bernilai 'localhost', atau salah terbaca jadi string 'MySQL', 
+// paksa ubah ke '127.0.0.1' agar koneksi TCP/IP sukses tanpa error nama host tidak dikenal.
+if (empty($envHost) || $envHost === 'localhost' || strtolower($envHost) === 'mysql') {
     $envHost = '127.0.0.1';
 }
 
