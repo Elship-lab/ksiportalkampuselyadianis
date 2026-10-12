@@ -4,12 +4,24 @@
  * Database Configuration
  */
 
-define('DB_HOST',   'localhost');
-define('DB_USER',   'root');
-define('DB_PASS',   '');          // Ganti sesuai password MySQL kamu
-define('DB_NAME',   'nexus_campus');
-define('DB_PORT',   3306);
-define('DB_CHARSET','utf8mb4');
+// Tangkap environment variables dari Railway
+$envHost = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST');
+$envUser = getenv('MYSQLUSER') ?: getenv('MYSQL_USER');
+$envPass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD');
+$envName = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE');
+$envPort = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT');
+
+// Jika $envHost kosong atau bernilai 'localhost', paksa ubah ke '127.0.0.1' agar memakai TCP/IP socket
+if (empty($envHost) || $envHost === 'localhost') {
+    $envHost = '127.0.0.1';
+}
+
+define('DB_HOST',    $envHost);
+define('DB_USER',    $envUser ?: 'root');
+define('DB_PASS',    $envPass ?: '');
+define('DB_NAME',    $envName ?: 'railway'); // Railway secara default menamai DB-nya 'railway'
+define('DB_PORT',    $envPort ? (int)$envPort : 3306);
+define('DB_CHARSET', 'utf8mb4');
 
 // App Config
 define('APP_NAME',    'NexusCampus');
@@ -19,14 +31,17 @@ define('APP_VERSION', '2.0.1');
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || ($_SERVER['SERVER_PORT'] ?? 80) == 443) ? "https://" : "http://";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8080';
 
-// Check if running on localhost:8000 root or Apache subfolder
-if (strpos($host, 'localhost:8000') !== false) {
+if (getenv('RAILWAY_STATIC_URL') || getenv('RAILWAY_PUBLIC_DOMAIN')) {
+    $railwayUrl = getenv('RAILWAY_PUBLIC_DOMAIN') ?: getenv('RAILWAY_STATIC_URL');
+    define('APP_URL', 'https://' . $railwayUrl);
+} elseif (strpos($host, 'localhost:8000') !== false || strpos($host, 'localhost') !== false) {
     define('APP_URL', $protocol . $host);
 } else {
     define('APP_URL', $protocol . $host . '/kampus-portal');
 }
+
 define('UPLOAD_DIR',  __DIR__ . '/../uploads/tugas/');
-define('MAX_FILE_MB', 10);  // max upload 10MB
+define('MAX_FILE_MB', 10);
 
 function getDB(): PDO {
     static $pdo = null;
